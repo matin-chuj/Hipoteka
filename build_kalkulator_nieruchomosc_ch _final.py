@@ -445,16 +445,23 @@ def create_cashflow_sheet(wb):
     set_cell_style(ws['A12'])
     set_cell_style(ws['B12'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
     
-    ws['A13'] = 'Różnica: wynajem – posiadanie [CHF/mies.]'
-    ws['B13'] = '=B12-B8'
+    ws['A13'] = 'Różnica: wynajem – posiadanie (bez amortyzacji) [CHF/mies.]'
+    ws['B13'] = '=B12-B7'
     set_cell_style(ws['A13'])
     set_cell_style(ws['B13'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+
     
     ws['A14'] = 'Komentarz'
     ws['B14'] = '=IF(B13>0,"Kupno tańsze od wynajmu","Kupno droższe od wynajmu")'
     set_cell_style(ws['A14'])
     set_cell_style(ws['B14'], bg_color='F2F2F2', font_bold=True)
-    
+
+    ws['A15'] = 'Różnica: wynajem – pełny cash-out (z amortyzacją) [CHF/mies.]'
+    ws['B15'] = '=B12-B8'
+    set_cell_style(ws['A15'])
+    set_cell_style(ws['B15'], bg_color='F2F2F2', number_format='#,##0.00')
+
+   
     from openpyxl.formatting.rule import Rule
     from openpyxl.styles.differential import DifferentialStyle
     green_fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
