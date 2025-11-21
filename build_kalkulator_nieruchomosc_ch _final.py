@@ -3189,8 +3189,225 @@ def create_liquidity_and_buffer_sheet(wb):
     ws.column_dimensions['H'].width = 18
 
 
+def create_amort_vs_etf_sheet(wb):
+    """Tworzy arkusz 19_Amortyzacja_vs_ETF - porównanie pełnej amortyzacji vs inwestycji w ETF."""
+    ws = wb.create_sheet('19_Amortyzacja_vs_ETF')
+    
+    # Nagłówek główny
+    ws['A1'] = 'PORÓWNANIE: PEŁNA AMORTYZACJA vs ETF ZAMIAST DOBROWOLNEJ AMORTYZACJI'
+    set_cell_style(ws['A1'], font_bold=True, font_size=14, border=False)
+    
+    # ========================================================================
+    # SEKCJA A – Dane wejściowe
+    # ========================================================================
+    
+    ws['A3'] = 'DANE WEJŚCIOWE'
+    set_cell_style(ws['A3'], font_bold=True, font_size=12, border=False)
+    
+    ws['A5'] = 'Wartość nieruchomości startowa [CHF]'
+    ws['B5'] = "='01_Wejście'!B4"
+    set_cell_style(ws['A5'])
+    set_cell_style(ws['B5'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A6'] = 'Kredyt startowy [CHF]'
+    ws['B6'] = "='02_Finansowanie'!B4"
+    set_cell_style(ws['A6'])
+    set_cell_style(ws['B6'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A7'] = 'Wkład własny [CHF]'
+    ws['B7'] = '=B5-B6'
+    set_cell_style(ws['A7'])
+    set_cell_style(ws['B7'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A9'] = 'Horyzont analizy (lata) – z arkusza 12'
+    ws['B9'] = "='12_Analiza_sprzedazy_X_lat'!B7"
+    set_cell_style(ws['A9'])
+    set_cell_style(ws['B9'], bg_color='F2F2F2', font_bold=True, number_format='0')
+    
+    ws['A11'] = 'Realny wzrost wartości nieruchomości [%]'
+    ws['B11'] = 0.02
+    set_cell_style(ws['A11'])
+    set_cell_style(ws['B11'], bg_color='CCE5FF', number_format=FORMAT_PERCENTAGE_00)
+    
+    ws['A12'] = 'Stopa zwrotu ETF [%]'
+    ws['B12'] = 0.06
+    set_cell_style(ws['A12'])
+    set_cell_style(ws['B12'], bg_color='CCE5FF', number_format=FORMAT_PERCENTAGE_00)
+    
+    ws['A14'] = 'Dobrowolna amortyzacja H1 roczna [CHF]'
+    ws['B14'] = "='02_Finansowanie'!B22"
+    set_cell_style(ws['A14'])
+    set_cell_style(ws['B14'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    # ========================================================================
+    # SEKCJA B – Tabela scenariusza A (pełna amortyzacja)
+    # ========================================================================
+    
+    ws['A18'] = 'SCENARIUSZ A – PEŁNA AMORTYZACJA (jak w bazowym modelu)'
+    set_cell_style(ws['A18'], font_bold=True, font_size=12, border=False)
+    
+    # Nagłówki
+    headers_A = ['Rok', 'Wartość nieruchomości [CHF]', 'Saldo kredytu A [CHF]', 'Equity A [CHF]']
+    
+    for col_idx, header in enumerate(headers_A, start=1):
+        cell = ws.cell(row=20, column=col_idx)
+        cell.value = header
+        set_cell_style(cell, font_bold=True, bg_color='D0D0D0', alignment='center')
+    
+    # Rok 0 (wiersz 21)
+    ws['A21'] = 0
+    ws['B21'] = '=$B$5'
+    ws['C21'] = '=$B$6'
+    ws['D21'] = '=B21-C21'
+    
+    for col in range(1, 5):
+        cell = ws.cell(row=21, column=col)
+        if col == 1:
+            cell.number_format = '0'
+        else:
+            cell.number_format = '#,##0.00'
+    
+    # Lata 1–30 (wiersze 22–51)
+    for year in range(1, 31):
+        row = 21 + year
+        harmonogram_row = 13 + year
+        
+        # Rok
+        ws.cell(row=row, column=1).value = year
+        ws.cell(row=row, column=1).number_format = '0'
+        
+        # Wartość nieruchomości
+        ws.cell(row=row, column=2).value = f'=B{row-1}*(1+$B$11)'
+        ws.cell(row=row, column=2).number_format = '#,##0.00'
+        
+        # Saldo kredytu A (z 05_Harmonogram_roczny)
+        ws.cell(row=row, column=3).value = f"='05_Harmonogram_roczny'!N{harmonogram_row}"
+        ws.cell(row=row, column=3).number_format = '#,##0.00'
+        
+        # Equity A
+        ws.cell(row=row, column=4).value = f'=B{row}-C{row}'
+        ws.cell(row=row, column=4).number_format = '#,##0.00'
+    
+    # ========================================================================
+    # SEKCJA C – Tabela scenariusza B (ETF zamiast dobrowolnej amortyzacji)
+    # ========================================================================
+    
+    ws['F18'] = 'SCENARIUSZ B – ETF ZAMIAST DOBROWOLNEJ AMORTYZACJI'
+    set_cell_style(ws['F18'], font_bold=True, font_size=12, border=False)
+    ws.merge_cells('F18:J18')
+    
+    # Nagłówki
+    headers_B = ['Rok', 'Dobrowolna amort. [CHF]', 'ETF narastająco [CHF]', 
+                 'Saldo kredytu B [CHF]', 'Equity nier. B [CHF]', 'Majątek netto B [CHF]']
+    
+    for col_idx, header in enumerate(headers_B, start=6):
+        cell = ws.cell(row=20, column=col_idx)
+        cell.value = header
+        set_cell_style(cell, font_bold=True, bg_color='D0D0D0', alignment='center')
+    
+    # Rok 0 (wiersz 21)
+    ws['F21'] = 0
+    ws['G21'] = 0
+    ws['H21'] = 0
+    ws['I21'] = '=$B$6'
+    ws['J21'] = '=$B$21'
+    ws['K21'] = '=J21+H21'
+    
+    for col in range(6, 12):
+        cell = ws.cell(row=21, column=col)
+        if col == 6:
+            cell.number_format = '0'
+        else:
+            cell.number_format = '#,##0.00'
+    
+    # Lata 1–30 (wiersze 22–51)
+    for year in range(1, 31):
+        row = 21 + year
+        
+        # Rok
+        ws.cell(row=row, column=6).value = year
+        ws.cell(row=row, column=6).number_format = '0'
+        
+        # Dobrowolna amortyzacja
+        ws.cell(row=row, column=7).value = '=$B$14'
+        ws.cell(row=row, column=7).number_format = '#,##0.00'
+        
+        # ETF narastająco
+        ws.cell(row=row, column=8).value = f'=H{row-1}*(1+$B$12)+G{row}'
+        ws.cell(row=row, column=8).number_format = '#,##0.00'
+        
+        # Saldo kredytu B (= Saldo A + skumulowana dobrowolna amort.)
+        ws.cell(row=row, column=9).value = f'=C{row}+SUM($G$22:G{row})'
+        ws.cell(row=row, column=9).number_format = '#,##0.00'
+        
+        # Equity nieruchomości B
+        ws.cell(row=row, column=10).value = f'=B{row}-I{row}'
+        ws.cell(row=row, column=10).number_format = '#,##0.00'
+        
+        # Majątek netto B
+        ws.cell(row=row, column=11).value = f'=J{row}+H{row}'
+        ws.cell(row=row, column=11).number_format = '#,##0.00'
+    
+    # ========================================================================
+    # SEKCJA D – Podsumowanie końcowe
+    # ========================================================================
+    
+    ws['A55'] = 'PODSUMOWANIE KOŃCOWE'
+    set_cell_style(ws['A55'], font_bold=True, font_size=12, border=False)
+    
+    ws['A57'] = 'Equity scenariusz A po X latach [CHF]'
+    ws['B57'] = '=INDEX($D$21:$D$51,$B$9+1)'
+    set_cell_style(ws['A57'], font_bold=True)
+    set_cell_style(ws['B57'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    ws['A58'] = 'Majątek netto scenariusz B po X latach [CHF]'
+    ws['B58'] = '=INDEX($K$21:$K$51,$B$9+1)'
+    set_cell_style(ws['A58'], font_bold=True)
+    set_cell_style(ws['B58'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    ws['A59'] = 'Różnica: B – A [CHF]'
+    ws['B59'] = '=B58-B57'
+    set_cell_style(ws['A59'], font_bold=True)
+    set_cell_style(ws['B59'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    ws['A61'] = 'Komentarz'
+    ws['B61'] = '=IF(B59>0,"ETF + mniejsza amortyzacja daje lepszy wynik","Pełna amortyzacja daje lepszy wynik")'
+    set_cell_style(ws['A61'], font_bold=True)
+    set_cell_style(ws['B61'], bg_color='FFEB9C', font_bold=True)
+    
+    # Formatowanie warunkowe
+    from openpyxl.formatting.rule import CellIsRule
+    green_fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+    red_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+    
+    ws.conditional_formatting.add('B59', CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill))
+    ws.conditional_formatting.add('B59', CellIsRule(operator='lessThan', formula=['0'], fill=red_fill))
+    
+    from openpyxl.formatting.rule import Rule
+    from openpyxl.styles.differential import DifferentialStyle
+    
+    ws.conditional_formatting.add('B61',
+        Rule(type='containsText', operator='containsText', text='lepszy wynik',
+             dxf=DifferentialStyle(fill=green_fill)))
+    ws.conditional_formatting.add('B61',
+        Rule(type='containsText', operator='containsText', text='Pełna amortyzacja',
+             dxf=DifferentialStyle(fill=red_fill)))
+    
+    # Szerokości kolumn
+    ws.column_dimensions['A'].width = 50
+    ws.column_dimensions['B'].width = 25
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 20
+    ws.column_dimensions['E'].width = 5
+    ws.column_dimensions['F'].width = 10
+    ws.column_dimensions['G'].width = 22
+    ws.column_dimensions['H'].width = 22
+    ws.column_dimensions['I'].width = 22
+    ws.column_dimensions['J'].width = 22
+    ws.column_dimensions['K'].width = 22
+
 def main():
-    """Główna funkcja tworząca cały skoroszyt z 18 arkuszami."""
+    """Główna funkcja tworząca cały skoroszyt z 19 arkuszami."""
     print("Tworzenie rozszerzonego kalkulatora nieruchomości w Szwajcarii...")
     
     wb = Workbook()
@@ -3255,6 +3472,9 @@ def main():
     print("  -> Tworzenie arkusza 18_Plynnosc_poduszka...")
     create_liquidity_and_buffer_sheet(wb)
     
+    print("  -> Tworzenie arkusza 19_Amortyzacja_vs_ETF...")
+    create_amort_vs_etf_sheet(wb)
+    
     wb.active = wb['01_Wejście']
     
     filename = 'kalkulator_nieruchomosc_CH.xlsx'
@@ -3281,6 +3501,7 @@ def main():
     print("  16_Renowacje - Model remontu i renowacji nieruchomości")
     print("  17_Podatki_kantony - Analiza podatkowa kantonów")
     print("  18_Plynnosc_poduszka - Analiza płynności i poduszki finansowej")
+    print("  19_Amortyzacja_vs_ETF - Porównanie pełnej amortyzacji vs inwestycji w ETF")
     print("\nInstrukcja użytkowania:")
     print("1. Otwórz plik w LibreOffice Calc")
     print("2. Przejdź do arkusza '01_Wejście'")
@@ -3297,7 +3518,8 @@ def main():
     print("13. W arkuszu 16_Renowacje zaplanuj remonty (rok, koszt, typ)")
     print("14. W arkuszu 17_Podatki_kantony wybierz 5 kantonów i porównaj obciążenia podatkowe")
     print("15. W arkuszu 18_Plynnosc_poduszka wpisz poduszkę finansową i inne koszty życia")
-    print("16. Wyniki pojawią się automatycznie we wszystkich arkuszach")
+    print("16. W arkuszu 19_Amortyzacja_vs_ETF wpisz realny wzrost nieruchomości i stopę ETF, aby porównać dwa scenariusze budowania majątku")
+    print("17. Wyniki pojawią się automatycznie we wszystkich arkuszach")
     print("\nPowodzenia w analizie opłacalności zakupu nieruchomości! 🏠🇨🇭")
 
 
