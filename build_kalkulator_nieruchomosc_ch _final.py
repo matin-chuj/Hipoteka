@@ -110,6 +110,15 @@ def create_input_sheet(wb):
     ws['B4'] = ''
     set_cell_style(ws['A4'])
     set_cell_style(ws['B4'], bg_color='CCE5FF', number_format='#,##0.00')
+
+
+   ws['B4'] = ''
+   set_cell_style(ws['A4'])
+   set_cell_style(ws['B4'], bg_color='CCE5FF', number_format='#,##0.00')
+
+   # DODAJ:
+   ws['C4'] = '=IF(B4>0,"","⚠️ Wprowadź cenę > 0")'
+   set_cell_style(ws['C4'], bg_color='FFC7CE', border=False)
     
     ws['A5'] = 'Szacunkowy % kosztów transakcyjnych'
     ws['B5'] = "='00_Stałe'!B10"
