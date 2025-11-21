@@ -446,7 +446,7 @@ def create_cashflow_sheet(wb):
     set_cell_style(ws['B12'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
     
     ws['A13'] = 'Różnica: wynajem – posiadanie (bez amortyzacji) [CHF/mies.]'
-    ws['B13'] = '=B12-B7'
+    ws['B13'] = '=B12-(B2+B5+B6)'
     set_cell_style(ws['A13'])
     set_cell_style(ws['B13'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
 
