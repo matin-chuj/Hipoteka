@@ -77,7 +77,7 @@ def create_constants_sheet(wb):
         ('Roczne koszty utrzymania (test)', 0.01, '1% wartości nieruchomości rocznie'),
         ('Max. Tragbarkeit (udział dochodu)', 0.33, 'Maksymalny udział kosztów w dochodzie'),
         ('Kurs CHF/PLN', 4.60, 'Aktualny kurs franka szwajcarskiego'),
-        ('Procent kosztów transakcyjnych (notariusz itd.)', 0.025, 'Szacunkowe koszty notarialne i opłaty'),
+        ('Procent kosztów transakcyjnych (notariusz itd.)', 0.016, 'Szacunkowe koszty notarialne i opłaty'),
     ]
     
     for idx, (param, value, desc) in enumerate(data, start=2):
