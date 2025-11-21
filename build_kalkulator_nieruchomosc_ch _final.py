@@ -3406,8 +3406,246 @@ def create_amort_vs_etf_sheet(wb):
     ws.column_dimensions['J'].width = 22
     ws.column_dimensions['K'].width = 22
 
+def create_amort_direct_vs_3a_sheet(wb):
+    """Tworzy arkusz 20_Amortyzacja_direct_vs_3a - porównanie amortyzacji bezpośredniej z pośrednią (Säule 3a)."""
+    ws = wb.create_sheet('20_Amortyzacja_direct_vs_3a')
+    
+    # ========================================================================
+    # SEKCJA A – Dane wejściowe
+    # ========================================================================
+    
+    # Nagłówek główny
+    ws['A1'] = 'AMORTYZACJA DIRECT VS SÄULE 3A'
+    set_cell_style(ws['A1'], font_bold=True, font_size=14, border=False)
+    
+    # Nagłówek sekcji
+    ws['A3'] = 'DANE WEJŚCIOWE'
+    set_cell_style(ws['A3'], font_bold=True, font_size=12, border=False)
+    
+    # Dane podstawowe
+    ws['A5'] = 'Wartość nieruchomości przy zakupie [CHF]'
+    ws['B5'] = "='01_Wejście'!B4"
+    set_cell_style(ws['A5'])
+    set_cell_style(ws['B5'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A6'] = 'Kwota kredytu początkowego [CHF]'
+    ws['B6'] = "='02_Finansowanie'!B4"
+    set_cell_style(ws['A6'])
+    set_cell_style(ws['B6'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A7'] = 'Wkład własny przy starcie [CHF]'
+    ws['B7'] = '=B5-B6'
+    set_cell_style(ws['A7'])
+    set_cell_style(ws['B7'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A8'] = 'Horyzont analizy [lata]'
+    ws['B8'] = "='12_Analiza_sprzedazy_X_lat'!B7"
+    set_cell_style(ws['A8'])
+    set_cell_style(ws['B8'], bg_color='F2F2F2', font_bold=True, number_format='0')
+    
+    # Stopy
+    ws['A9'] = 'Realny wzrost wartości nieruchomości [%/rok]'
+    ws['B9'] = 0.02
+    set_cell_style(ws['A9'])
+    set_cell_style(ws['B9'], bg_color='CCE5FF', number_format=FORMAT_PERCENTAGE_00)
+    
+    ws['A10'] = 'Stopa zwrotu Säule 3a [%/rok]'
+    ws['B10'] = 0.03
+    set_cell_style(ws['A10'])
+    set_cell_style(ws['B10'], bg_color='CCE5FF', number_format=FORMAT_PERCENTAGE_00)
+    
+    ws['A11'] = 'Efektywna stawka podatkowa (odpis 3a) [%]'
+    ws['B11'] = 0.20
+    set_cell_style(ws['A11'])
+    set_cell_style(ws['B11'], bg_color='CCE5FF', number_format=FORMAT_PERCENTAGE_00)
+    
+    # Amortyzacja roczna
+    ws['A13'] = 'AMORTYZACJA ROCZNA'
+    set_cell_style(ws['A13'], font_bold=True, font_size=12, border=False)
+    
+    ws['A14'] = 'Amortyzacja obowiązkowa [CHF/rok]'
+    ws['B14'] = "='02_Finansowanie'!B21*12"
+    set_cell_style(ws['A14'])
+    set_cell_style(ws['B14'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A15'] = 'Amortyzacja dobrowolna [CHF/rok]'
+    ws['B15'] = "='02_Finansowanie'!B23*12"
+    set_cell_style(ws['A15'])
+    set_cell_style(ws['B15'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    ws['A16'] = 'Łączna amortyzacja (obowiązkowa + dobrowolna) [CHF/rok]'
+    ws['B16'] = '=B14+B15'
+    set_cell_style(ws['A16'])
+    set_cell_style(ws['B16'], bg_color='F2F2F2', font_bold=True, number_format='#,##0.00')
+    
+    # ========================================================================
+    # SEKCJA B – Scenariusz A (direct amortisation)
+    # ========================================================================
+    
+    ws['A20'] = 'SCENARIUSZ A – AMORTYZACJA BEZPOŚREDNIA (DIRECT)'
+    set_cell_style(ws['A20'], font_bold=True, font_size=12, border=False)
+    
+    # Nagłówki tabeli
+    headers_A = ['Rok', 'Wartość nieruchomości A [CHF]', 'Saldo kredytu A [CHF]', 'Equity A [CHF]']
+    
+    for col_idx, header in enumerate(headers_A, start=1):
+        cell = ws.cell(row=22, column=col_idx)
+        cell.value = header
+        set_cell_style(cell, font_bold=True, bg_color='D0D0D0', alignment='center')
+    
+    # Wiersze danych (lata 1-30)
+    for year in range(1, 31):
+        row = 22 + year
+        
+        # Kolumna A - Rok
+        ws.cell(row=row, column=1).value = year
+        ws.cell(row=row, column=1).number_format = '0'
+        
+        # Kolumna B - Wartość nieruchomości A
+        ws.cell(row=row, column=2).value = f'=$B$5*(1+$B$9)^A{row}'
+        ws.cell(row=row, column=2).number_format = '#,##0.00'
+        
+        # Kolumna C - Saldo kredytu A
+        harmonogram_row = 12 + year
+        ws.cell(row=row, column=3).value = f"=INDEX('05_Harmonogram_roczny'!$L:$L,{harmonogram_row})"
+        ws.cell(row=row, column=3).number_format = '#,##0.00'
+        
+        # Kolumna D - Equity A
+        ws.cell(row=row, column=4).value = f'=B{row}-C{row}'
+        ws.cell(row=row, column=4).number_format = '#,##0.00'
+    
+    # ========================================================================
+    # SEKCJA C – Scenariusz B (indirect via Säule 3a)
+    # ========================================================================
+    
+    ws['G20'] = 'SCENARIUSZ B – AMORTYZACJA POŚREDNIA (SÄULE 3A)'
+    set_cell_style(ws['G20'], font_bold=True, font_size=12, border=False)
+    
+    # Nagłówki tabeli
+    headers_B = [
+        'Rok',
+        'Amortyzacja dobrowolna [CHF/rok]',
+        'Wpłata na Säule 3a [CHF/rok]',
+        'Ulga podatkowa dzięki 3a [CHF/rok]',
+        'Wartość Säule 3a [CHF]',
+        'Saldo kredytu B [CHF]',
+        'Equity nieruchomości B [CHF]',
+        'Majątek netto B (Equity_B + 3a) [CHF]'
+    ]
+    
+    for col_idx, header in enumerate(headers_B, start=7):
+        cell = ws.cell(row=22, column=col_idx)
+        cell.value = header
+        set_cell_style(cell, font_bold=True, bg_color='D0D0D0', alignment='center')
+    
+    # Wartość początkowa Säule 3a (wiersz 22, kolumna K)
+    ws.cell(row=22, column=11).value = 0
+    ws.cell(row=22, column=11).number_format = '#,##0.00'
+    
+    # Wiersze danych (lata 1-30)
+    for year in range(1, 31):
+        row = 22 + year
+        
+        # Kolumna G - Rok
+        ws.cell(row=row, column=7).value = year
+        ws.cell(row=row, column=7).number_format = '0'
+        
+        # Kolumna H - Amortyzacja dobrowolna
+        ws.cell(row=row, column=8).value = '=$B$15'
+        ws.cell(row=row, column=8).number_format = '#,##0.00'
+        
+        # Kolumna I - Wpłata na Säule 3a
+        ws.cell(row=row, column=9).value = f'=H{row}'
+        ws.cell(row=row, column=9).number_format = '#,##0.00'
+        
+        # Kolumna J - Ulga podatkowa
+        ws.cell(row=row, column=10).value = f'=I{row}*$B$11'
+        ws.cell(row=row, column=10).number_format = '#,##0.00'
+        
+        # Kolumna K - Wartość Säule 3a
+        ws.cell(row=row, column=11).value = f'=K{row-1}*(1+$B$10)+I{row}+J{row}'
+        ws.cell(row=row, column=11).number_format = '#,##0.00'
+        
+        # Kolumna L - Saldo kredytu B
+        ws.cell(row=row, column=12).value = f'=C{row}+SUM($H$23:H{row})'
+        ws.cell(row=row, column=12).number_format = '#,##0.00'
+        
+        # Kolumna M - Equity nieruchomości B
+        ws.cell(row=row, column=13).value = f'=B{row}-L{row}'
+        ws.cell(row=row, column=13).number_format = '#,##0.00'
+        
+        # Kolumna N - Majątek netto B
+        ws.cell(row=row, column=14).value = f'=M{row}+K{row}'
+        ws.cell(row=row, column=14).number_format = '#,##0.00'
+    
+    # ========================================================================
+    # SEKCJA D – Podsumowanie na horyzoncie X lat
+    # ========================================================================
+    
+    ws['A56'] = 'PODSUMOWANIE PO X LATACH'
+    set_cell_style(ws['A56'], font_bold=True, font_size=12, border=False)
+    
+    # Scenariusz A
+    ws['A58'] = 'Equity A po X latach [CHF]'
+    ws['B58'] = '=INDEX($D$23:$D$52,$B$8)'
+    set_cell_style(ws['A58'], font_bold=True)
+    set_cell_style(ws['B58'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    # Scenariusz B
+    ws['A59'] = 'Equity B nieruchomości po X latach [CHF]'
+    ws['B59'] = '=INDEX($M$23:$M$52,$B$8)'
+    set_cell_style(ws['A59'], font_bold=True)
+    set_cell_style(ws['B59'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    ws['A60'] = 'Wartość Säule 3a po X latach [CHF]'
+    ws['B60'] = '=INDEX($K$23:$K$52,$B$8)'
+    set_cell_style(ws['A60'], font_bold=True)
+    set_cell_style(ws['B60'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    ws['A61'] = 'Majątek netto B po X latach [CHF]'
+    ws['B61'] = '=B59+B60'
+    set_cell_style(ws['A61'], font_bold=True)
+    set_cell_style(ws['B61'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    # Porównanie
+    ws['A63'] = 'Różnica: Majątek B – Equity A [CHF]'
+    ws['B63'] = '=B61-B58'
+    set_cell_style(ws['A63'], font_bold=True)
+    set_cell_style(ws['B63'], bg_color='FFEB9C', font_bold=True, number_format='#,##0.00')
+    
+    ws['A64'] = 'Werdykt'
+    ws['B64'] = '=IF(B63>0,"Lepsza amortyzacja pośrednia (Säule 3a)","Lepsza amortyzacja bezpośrednia")'
+    set_cell_style(ws['A64'], font_bold=True)
+    set_cell_style(ws['B64'], bg_color='FFEB9C', font_bold=True)
+    
+    # Formatowanie warunkowe dla werdyktu
+    from openpyxl.formatting.rule import Rule
+    from openpyxl.styles.differential import DifferentialStyle
+    green_fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+    red_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+    
+    ws.conditional_formatting.add('B63',
+        Rule(type='expression', formula=['B63>0'], dxf=DifferentialStyle(fill=green_fill)))
+    ws.conditional_formatting.add('B63',
+        Rule(type='expression', formula=['B63<0'], dxf=DifferentialStyle(fill=red_fill)))
+    
+    ws.conditional_formatting.add('B64',
+        Rule(type='containsText', operator='containsText', text='pośrednia',
+             dxf=DifferentialStyle(fill=green_fill)))
+    ws.conditional_formatting.add('B64',
+        Rule(type='containsText', operator='containsText', text='bezpośrednia',
+             dxf=DifferentialStyle(fill=red_fill)))
+    
+    # Szerokości kolumn
+    ws.column_dimensions['A'].width = 50
+    ws.column_dimensions['B'].width = 20
+    for col in ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']:
+        ws.column_dimensions[col].width = 18
+
+
+
 def main():
-    """Główna funkcja tworząca cały skoroszyt z 19 arkuszami."""
+    """Główna funkcja tworząca cały skoroszyt z 20 arkuszami."""
     print("Tworzenie rozszerzonego kalkulatora nieruchomości w Szwajcarii...")
     
     wb = Workbook()
@@ -3475,6 +3713,9 @@ def main():
     print("  -> Tworzenie arkusza 19_Amortyzacja_vs_ETF...")
     create_amort_vs_etf_sheet(wb)
     
+    print("  -> Tworzenie arkusza 20_Amortyzacja_direct_vs_3a...")
+    create_amort_direct_vs_3a_sheet(wb)
+    
     wb.active = wb['01_Wejście']
     
     filename = 'kalkulator_nieruchomosc_CH.xlsx'
@@ -3502,6 +3743,7 @@ def main():
     print("  17_Podatki_kantony - Analiza podatkowa kantonów")
     print("  18_Plynnosc_poduszka - Analiza płynności i poduszki finansowej")
     print("  19_Amortyzacja_vs_ETF - Porównanie pełnej amortyzacji vs inwestycji w ETF")
+    print("  20_Amortyzacja_direct_vs_3a - Porównanie amortyzacji bezpośredniej z amortyzacją pośrednią (Säule 3a)")
     print("\nInstrukcja użytkowania:")
     print("1. Otwórz plik w LibreOffice Calc")
     print("2. Przejdź do arkusza '01_Wejście'")
@@ -3519,7 +3761,8 @@ def main():
     print("14. W arkuszu 17_Podatki_kantony wybierz 5 kantonów i porównaj obciążenia podatkowe")
     print("15. W arkuszu 18_Plynnosc_poduszka wpisz poduszkę finansową i inne koszty życia")
     print("16. W arkuszu 19_Amortyzacja_vs_ETF wpisz realny wzrost nieruchomości i stopę ETF, aby porównać dwa scenariusze budowania majątku")
-    print("17. Wyniki pojawią się automatycznie we wszystkich arkuszach")
+    print("17. W arkuszu 20_Amortyzacja_direct_vs_3a wpisz realny wzrost nieruchomości, stopę zwrotu 3a i stawkę podatkową, aby porównać amortyzację bezpośrednią z pośrednią przez Säule 3a")
+    print("18. Wyniki pojawią się automatycznie we wszystkich arkuszach")
     print("\nPowodzenia w analizie opłacalności zakupu nieruchomości! 🏠🇨🇭")
 
 
